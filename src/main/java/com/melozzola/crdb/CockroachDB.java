@@ -22,8 +22,8 @@ import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.SocketAddress;
+import java.nio.channels.FileLock;
 import java.nio.channels.SocketChannel;
-import java.nio.file.Files;
 import java.util.*;
 
 /**
@@ -388,8 +388,6 @@ public class CockroachDB extends ExternalResource {
      */
     private static String installBinariesIfNeeded(final String binaryName){
 
-        // TODO - file locking to avoid two processes to install the binaries
-
         final File tmpFolder = new File(System.getProperty("java.io.tmpdir"), "crdb-bin");
         if (!tmpFolder.exists()) {
             tmpFolder.mkdirs();
@@ -400,12 +398,34 @@ public class CockroachDB extends ExternalResource {
             return binary.getAbsolutePath();
         }
 
-        try(InputStream is = ClassLoader.class.getResourceAsStream("/binaries/" + binaryName)) {
-            Files.copy(is, binary.toPath());
+        FileLock lock = null;
+        try(InputStream is = CockroachDB.class.getResourceAsStream("/binaries/" + binaryName)) {
+            FileOutputStream binaryOs = new FileOutputStream(binary);
+
+            // Cross process lock. Only one process should install the binaries.
+            lock = binaryOs.getChannel().lock();
+
+            // From here after, only one process will execute this block.
+            if (binary.exists() && binary.length() > 0){
+                return binary.getAbsolutePath();
+            }
+            byte[] buffer = new byte[1024*4];
+            int len;
+            while ((len = is.read(buffer)) != -1) {
+                binaryOs.write(buffer, 0, len);
+            }
             binary.setExecutable(true);
             return binary.getAbsolutePath();
         }catch (Exception e){
             throw new IllegalStateException("Error saving the binary", e);
+        }finally {
+            if (lock != null){
+                try {
+                    lock.release();
+                }catch (Exception e){
+                    // Nothing we can do
+                }
+            }
         }
 
     }

@@ -16,6 +16,7 @@
 package com.melozzola.crdb;
 
 import com.zaxxer.hikari.HikariDataSource;
+import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -24,7 +25,9 @@ import org.junit.runners.MethodSorters;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import static com.melozzola.crdb.CockroachDB.builder;
@@ -68,12 +71,21 @@ public class CockroachDBTest {
     public void _001TestRead() throws Exception {
 
         final Date time = CRDB.getFromCtxOrThrow("TIME", Date.class);
-        System.out.println("Time: " + time);
+        Assert.assertNotNull(time);
 
+        final List<String> expected = Arrays.asList("001_one", "002_two", "003_three");
         try(Connection connection = DS.getConnection()){
-            ResultSet rs = connection.prepareStatement("select * from test_data;").executeQuery();
-            while (rs.next()){
-                System.out.println(rs.getString("id") + " - " + rs.getString("data"));
+            try(ResultSet rs = connection.prepareStatement("SELECT * FROM test_data ORDER BY data;").executeQuery()){
+                int index = 0;
+                while (rs.next()){
+                    String id = rs.getString("id");
+                    String data = rs.getString("data");
+                    String expectedData = expected.get(index++);
+                    String expectedId = CRDB.getFromCtxOrThrow(expectedData, String.class);
+                    Assert.assertEquals(expectedId, id);
+                    Assert.assertEquals(expectedData, data);
+                }
+                Assert.assertEquals(3, index);
             }
         }
     }
@@ -82,12 +94,19 @@ public class CockroachDBTest {
     public void _002TestAdd() throws Exception {
 
         final Date time = CRDB.getFromCtxOrThrow("TIME", Date.class);
-        System.out.println("Time: " + time);
+        Assert.assertNotNull(time);
 
+        final List<String> expected = Arrays.asList("004_four", "005_five");
         try(Connection connection = DS.getConnection()){
-            ResultSet rs = connection.prepareStatement("INSERT INTO test_data (data) VALUES ('four'), ('five') RETURNING id, data;").executeQuery();
-            while (rs.next()){
-                System.out.println(rs.getString("id") + " - " + rs.getString("data"));
+            try(ResultSet rs = connection.prepareStatement("INSERT INTO test_data (data) VALUES ('004_four'), ('005_five') RETURNING id, data;").executeQuery()) {
+                int index = 0;
+                while (rs.next()) {
+                    String id = rs.getString("id");
+                    String data = rs.getString("data");
+                    String expectedData = expected.get(index++);
+                    Assert.assertEquals(expectedData, data);
+                    Assert.assertNotNull(id);
+                }
             }
         }
     }
@@ -98,7 +117,7 @@ public class CockroachDBTest {
             connection.prepareStatement("DROP DATABASE IF EXISTS test CASCADE;").execute();
             connection.prepareStatement("CREATE DATABASE IF NOT EXISTS test;").execute();
             connection.prepareStatement("CREATE TABLE IF NOT EXISTS test_data (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), data STRING);").execute();
-            rs = connection.prepareStatement("INSERT INTO test_data (data) VALUES ('one'), ('two'), ('three') RETURNING id, data;").executeQuery();
+            rs = connection.prepareStatement("INSERT INTO test_data (data) VALUES ('001_one'), ('002_two'), ('003_three') RETURNING id, data;").executeQuery();
 
             // Here we use the context to add an inverted index to look up the automatically generated uuid from the data.
             while (rs.next()){

@@ -42,6 +42,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <junit.version>4.12</junit.version>
+        <javadoc.opts>-Xdoclint:none</javadoc.opts>
     </properties>
 
     <dependencies>
@@ -71,6 +72,36 @@
     <build>
         <plugins>
             <plugin>
+                <!-- Deploy a "-sources.jar" along with build -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.0.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <!-- Deploy a "-javadoc.jar" along with build -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.10.4</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <!--
                     Plugin to check that all source files have the appropriate open source license header.
                     This will fail the build if any source files don't have the open source license header.
@@ -78,7 +109,7 @@
                 -->
                 <groupId>com.mycila.maven-license-plugin</groupId>
                 <artifactId>maven-license-plugin</artifactId>
-                <version>1.10.b1</version>
+                <version>3.0</version>
                 <configuration>
                     <header>src/etc/header.txt</header>
                     <includes>
@@ -105,5 +136,26 @@
 
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <!-- Prevent JavaDoc warnings from failing the build under Java 8... -->
+            <id>doclint-java8-disable</id>
+            <activation>
+                <jdk>[1.8,)</jdk>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <configuration>
+                            <additionalparam>${javadoc.opts}</additionalparam>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>
