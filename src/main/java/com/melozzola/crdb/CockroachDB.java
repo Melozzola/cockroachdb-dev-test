@@ -27,8 +27,8 @@ import java.nio.file.Files;
 import java.util.*;
 
 /**
- * Junit rule that sets up CocokroachDB for testing.
- * The rule is spanning a new CocokroachDB process every time is called.
+ * <p> Junit rule that sets up CocokroachDB for testing.
+ * <p> The rule is spanning a new CocokroachDB process every time is called.
  */
 public class CockroachDB extends ExternalResource {
 
@@ -51,11 +51,12 @@ public class CockroachDB extends ExternalResource {
     private Process crdb;
 
     /**
-     * Listener invoked when CocokroachDB is up and running
+     * <p> Listener invoked when CocokroachDB is up and running
      */
     public interface Listener {
         /**
-         * Callback invoked when CocokroachDB has started.
+         * <p> Callback invoked when CocokroachDB has started.
+         *
          * @param dbPort The db port CocokroachDB is listening to
          * @param httpPort The CocokroachDB UI port
          * @param ctx A context that can be used to pass values from the rule to the actual unit tests.
@@ -64,7 +65,7 @@ public class CockroachDB extends ExternalResource {
     }
 
     /**
-     * Builder to help configuring the {@link CockroachDB} rule in a fluent way.
+     * <p> Builder to help configuring the {@link CockroachDB} rule in a fluent way.
      */
     public static class Builder {
 
@@ -75,7 +76,7 @@ public class CockroachDB extends ExternalResource {
         }
 
         /**
-         * Specifies the cockroach db host. By default is 'localhost'.
+         * <p> Specifies the cockroach db host. By default is 'localhost'.
          *
          * @param host The cockroach db host
          * @return The builder.
@@ -86,7 +87,7 @@ public class CockroachDB extends ExternalResource {
         }
 
         /**
-         * Specifies the port cockroach db will listen to. By default is randomly generated.
+         * <p> Specifies the port cockroach db will listen to. By default is randomly generated.
          *
          * @param dbPort The database port
          * @return The builder.
@@ -97,7 +98,7 @@ public class CockroachDB extends ExternalResource {
         }
 
         /**
-         * Switches on secure connection.
+         * <p> Switches on secure connection.
          *
          * @return The builder.
          */
@@ -107,7 +108,7 @@ public class CockroachDB extends ExternalResource {
         }
 
         /**
-         * Where cockrach db will store the data. By default in a temporary folder and it is deleted after the test.
+         * <p> Where cockrach db will store the data. By default in a temporary folder and it is deleted after the test.
          *
          * @param location The data folder location.
          * @param cleanUpDataFolder if the folder needs to be deleted at the end of the test.
@@ -120,7 +121,7 @@ public class CockroachDB extends ExternalResource {
         }
 
         /**
-         * Sets the http port for the UI. By default is randomly generated.
+         * <p> Sets the http port for the UI. By default is randomly generated.
          *
          * @param httpPort The http port for the UI.
          * @return The builder.
@@ -131,7 +132,7 @@ public class CockroachDB extends ExternalResource {
         }
 
         /**
-         * Sets the executable location. By default the rule will download the executable into a temporary folder.
+         * <p> Sets the executable location. By default the rule will download the executable into a temporary folder.
          *
          * @param executable The path to the executable.
          * @return The builder.
@@ -142,7 +143,7 @@ public class CockroachDB extends ExternalResource {
         }
 
         /**
-         * How long (milliseconds) to wait for cockroach db to start up. By default is 10 seconds.
+         * <p> How long (milliseconds) to wait for cockroach db to start up. By default is 10 seconds.
          *
          * @param startupWaitTimeMs How many milliseconds to wait.
          * @return The builder.
@@ -153,7 +154,7 @@ public class CockroachDB extends ExternalResource {
         }
 
         /**
-         * What cockroach db version to use. By default is 1.1.2.
+         * <p> What cockroach db version to use. By default is 1.1.2.
          *
          * @param version The version to use
          * @return The builder.
@@ -164,7 +165,7 @@ public class CockroachDB extends ExternalResource {
         }
 
         /**
-         * Add an {@link Appendable} to get logging messages.
+         * <p> Add an {@link Appendable} to get logging messages.
          *
          * @param logger The logger.
          * @return The builder.
@@ -175,44 +176,73 @@ public class CockroachDB extends ExternalResource {
         }
 
         /**
+         * <p> Where to redirect the cockroach db std error. By default is disabled.
          *
-         * @param appendable
-         * @return
+         * @param stdErr The redirect destination.
+         * @return The builder.
          */
-        public Builder stdErr(final Appendable appendable){
+        public Builder stdErr(final Appendable stdErr){
             config.redirectStdErr = true;
-            config.stdErr = appendable;
+            config.stdErr = stdErr;
             return this;
         }
 
-        public Builder stdOut(final Appendable appendable){
+        /**
+         * <p> Where to redirect the cockroach db std output. By default is disabled.
+         *
+         * @param stdOut The redirect destination.
+         * @return The builder.
+         */
+        public Builder stdOut(final Appendable stdOut){
             config.redirectStdOut = true;
-            config.stdOut = appendable;
+            config.stdOut = stdOut;
             return this;
         }
 
+        /**
+         * <p> Enables the std out redirection. Cockroach db std out will be printed to {@code System.out}.
+         *
+         * @return The builder.
+         */
         public Builder redirectStdOut(){
             config.redirectStdOut = true;
             return this;
         }
 
+        /**
+         * <p> Enables the std err redirection. Cockroach db std out will be printed to {@code System.err}.
+         *
+         * @return The builder.
+         */
         public Builder redirectStdErr(){
             config.redirectStdErr = true;
             return this;
         }
 
+        /**
+         * <p> Builds a {@link CockroachDB} with the specified configuration and with the specified startup listener.
+         *
+         * @param listener The startup listener.
+         * @return the {@link CockroachDB} rule.
+         */
         public CockroachDB build(final Listener listener){
             config.listener = listener;
             return new CockroachDB(config);
         }
 
+        /**
+         * <p> Builds a {@link CockroachDB} with the specified configuration.
+         *
+         * @return the {@link CockroachDB} rule.
+         */
         public CockroachDB build(){
             return new CockroachDB(config);
         }
     }
 
     /**
-     * Returns a {@link Builder} to configure and instantiate a {@code CockroachDB} rule.
+     * <p> Returns a {@link Builder} to configure and instantiate a {@code CockroachDB} rule.
+     *
      * @return The builder.
      */
     public static Builder builder(){
@@ -220,7 +250,7 @@ public class CockroachDB extends ExternalResource {
     }
 
     /**
-     * CockroachDB configuration.
+     * <p> CockroachDB configuration.
      */
     private static class Config {
         private String host = "localhost";
@@ -241,7 +271,7 @@ public class CockroachDB extends ExternalResource {
     }
 
     /**
-     * Private constructor.
+     * <p> Private constructor.
      *
      * @param config The configuration
      */
@@ -253,7 +283,7 @@ public class CockroachDB extends ExternalResource {
     }
 
     /**
-     * Utility method to build the command to start up cockroach db.
+     * <p> Utility method to build the command to start up cockroach db.
      *
      * @param config The configuration.
      * @return The command.
@@ -302,8 +332,9 @@ public class CockroachDB extends ExternalResource {
     }
 
     /**
-     * Retrieves an object from the rule context and casts it to the specified type.
-     * If the object is not in the context it will return null.
+     * <p> Retrieves an object from the rule context and casts it to the specified type.
+     *     If the object is not in the context it will return null.
+     *
      * @param key The object key.
      * @param type The object type.
      * @param <T> The type of the object.
@@ -314,8 +345,9 @@ public class CockroachDB extends ExternalResource {
     }
 
     /**
-     * Retrieves an object from the rule context and casts it to the specified type.
-     * If the object is not in the context it will return the default value specified as parameter.
+     * <p> Retrieves an object from the rule context and casts it to the specified type.
+     *     If the object is not in the context it will return the default value specified as parameter.
+     *
      * @param key The object key.
      * @param type The object type.
      * @param defaultValue The default value.
@@ -331,8 +363,9 @@ public class CockroachDB extends ExternalResource {
     }
 
     /**
-     * Retrieves an object from the rule context and casts it to the specified type.
-     * If the object is not in the context it will throw an {@link IllegalStateException}
+     * <p> Retrieves an object from the rule context and casts it to the specified type.
+     *     If the object is not in the context it will throw an {@link IllegalStateException}
+     *
      * @param key The object key.
      * @param type The object type
      * @param <T> The type of the object
@@ -347,8 +380,8 @@ public class CockroachDB extends ExternalResource {
     }
 
     /**
-     * Utility method to install the binaries in a temp folder.
-     * The temp folder is always the same so is not installing the file at every test run.
+     * <p> Utility method to install the binaries in a temp folder.
+     *     The temp folder is always the same so is not installing the file at every test run.
      *
      * @param binaryName The binary name
      * @return The full path of the binary.
@@ -378,7 +411,7 @@ public class CockroachDB extends ExternalResource {
     }
 
     /**
-     * Utility method to log messages to an {@link Appendable} specified during the rule configuration.
+     * <p> Utility method to log messages to an {@link Appendable} specified during the rule configuration.
      *
      * @param message The message to log.
      */
@@ -394,7 +427,7 @@ public class CockroachDB extends ExternalResource {
     }
 
     /**
-     * Utility method to create a tmp folder for the cockroachDB data.
+     * <p> Utility method to create a tmp folder for the cockroachDB data.
      *
      * @param parentFolder The parent folder
      * @return The temporary folder.
@@ -412,7 +445,7 @@ public class CockroachDB extends ExternalResource {
     }
 
     /**
-     * Utility method to recursively delete a folder. Used to clean up the cockroachDB data after the test finished.
+     * <p> Utility method to recursively delete a folder. Used to clean up the cockroachDB data after the test finished.
      *
      * @param file The folder to delete.
      */
@@ -427,7 +460,7 @@ public class CockroachDB extends ExternalResource {
     }
 
     /**
-     * Utility method to find an open port.
+     * <p> Utility method to find an open port.
      *
      * @param minPort The min port.
      * @param maxPort The max port
@@ -459,7 +492,7 @@ public class CockroachDB extends ExternalResource {
     }
 
     /**
-     * Generates a random port between a max and min port.
+     * <p> Generates a random port between a max and min port.
      *
      * @param minPort The min port.
      * @param maxPort The max port.
@@ -471,7 +504,7 @@ public class CockroachDB extends ExternalResource {
     }
 
     /**
-     * Utility method to verify if the port is available.
+     * <p> Utility method to verify if the port is available.
      *
      * @param port The port.
      * @return {@code true} if the port is available, false otherwise.
@@ -487,8 +520,8 @@ public class CockroachDB extends ExternalResource {
     }
 
     /**
-     * Utility method that waits for cockroach db to start. It waits until the database port is available.
-     * It will wait up to the time specified and it will throw an exception if the time is exceeded.
+     * <p> Utility method that waits for cockroach db to start. It waits until the database port is available.
+     *     It will wait up to the time specified and it will throw an exception if the time is exceeded.
      *
      * @param host The host.
      * @param port The database port.
@@ -517,7 +550,7 @@ public class CockroachDB extends ExternalResource {
     }
 
     /**
-     * Supported cockroach DB versions.
+     * <p> Supported cockroach DB versions.
      */
     public enum Version {
         V_1_1_2("v1.1.2");
@@ -534,7 +567,7 @@ public class CockroachDB extends ExternalResource {
     }
 
     /**
-     * Utility method to get the binary name based on OS type and cockroachDB version.
+     * <p> Utility method to get the binary name based on OS type and cockroachDB version.
      *
      * @param crdbVersion The cockroach DB version.
      * @return The binary name.
@@ -556,9 +589,9 @@ public class CockroachDB extends ExternalResource {
     }
 
     /**
-     * {@link Runnable} that consumes a stream and pipes the data to an {@link Appendable}.
-     * Used to output the std out and err of the cockroach process to a different place.
-     * Each line will be prefixed with 'crdb>'.
+     * <p> {@link Runnable} that consumes a stream and pipes the data to an {@link Appendable}.
+     *     Used to output the std out and err of the cockroach process to a different place.
+     * <p> Each line will be prefixed with 'crdb>'.
      */
     private static class StreamReader implements Runnable {
 

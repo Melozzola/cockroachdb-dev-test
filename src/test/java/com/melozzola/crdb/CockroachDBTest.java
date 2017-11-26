@@ -62,7 +62,6 @@ public class CockroachDBTest {
         // Initialise the database and add some data
         initDatabase(DS, ctx);
 
-
     });
 
     @Test
