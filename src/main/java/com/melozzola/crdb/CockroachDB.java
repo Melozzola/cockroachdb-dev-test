@@ -398,9 +398,11 @@ public class CockroachDB extends ExternalResource {
             return binary.getAbsolutePath();
         }
 
+        /// XXX - refactor this...it's a bit too messy
+
         FileLock lock = null;
-        try(InputStream is = CockroachDB.class.getResourceAsStream("/binaries/" + binaryName)) {
-            FileOutputStream binaryOs = new FileOutputStream(binary);
+        try(InputStream is = CockroachDB.class.getResourceAsStream("/binaries/" + binaryName);
+            FileOutputStream binaryOs = new FileOutputStream(binary)) {
 
             // Cross process lock. Only one process should install the binaries.
             lock = binaryOs.getChannel().lock();
@@ -414,6 +416,7 @@ public class CockroachDB extends ExternalResource {
             while ((len = is.read(buffer)) != -1) {
                 binaryOs.write(buffer, 0, len);
             }
+            binaryOs.close();
             binary.setExecutable(true);
             return binary.getAbsolutePath();
         }catch (Exception e){
