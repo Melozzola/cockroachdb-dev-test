@@ -1,0 +1,19 @@
+language: java
+
+dist: trusty
+
+jdk:
+- oraclejdk8
+
+install: /bin/true
+
+branches:
+  only:
+  - master
+
+env:
+- JAVA_TOOL_OPTIONS="-Xmx2g"
+
+script:
+- ./mvnw install -DskipTests=true -Dmaven.javadoc.skip=true --batch-mode --show-version
+- ./mvnw test verify --batch-mode
