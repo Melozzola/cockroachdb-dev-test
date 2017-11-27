@@ -1,5 +1,5 @@
 /**
- * Copyright 2018 Silvano Riz
+ * Copyright 2017 Silvano Riz
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.melozzola.crdb;
+package io.github.melozzola.crdb;
 
 import com.zaxxer.hikari.HikariDataSource;
 import org.junit.Assert;
@@ -30,8 +30,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import static com.melozzola.crdb.CockroachDB.builder;
-
 /**
  * <p> Example of test.
  * <p> In this example the test order is important and it is achieved using the annotation {@link FixMethodOrder}
@@ -45,7 +43,7 @@ public class CockroachDBTest {
     private static HikariDataSource DS;
 
     @ClassRule
-    public static CockroachDB CRDB = builder()
+    public static CockroachDB CRDB = CockroachDB.builder()
             .logger(System.out)
             .stdErr(System.err)
             .stdOut(System.out)

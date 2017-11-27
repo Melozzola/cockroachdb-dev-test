@@ -1,5 +1,5 @@
 /**
- * Copyright 2018 Silvano Riz
+ * Copyright 2017 Silvano Riz
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.melozzola.crdb;
+package io.github.melozzola.crdb;
 
 import org.junit.rules.ExternalResource;
 

@@ -7,7 +7,7 @@ This library contains a [Junit 4](http://junit.org/junit4/) Rule to enable easy 
 
 ```xml
 <dependency>
-    <groupId>com.melozzola</groupId>
+    <groupId>io.github.melozzola</groupId>
     <artifactId>cockroachdb-junit</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 </dependency>
