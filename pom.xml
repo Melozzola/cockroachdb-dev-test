@@ -4,12 +4,16 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.github.melozzola</groupId>
-    <artifactId>cockroachdb-junit</artifactId>
+    <artifactId>cockroachdb-test</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <packaging>jar</packaging>
-
-    <name>cockroachdb-junit</name>
+    <name>cockroachdb-test</name>
     <description>JUnit rule for CockroachDB development</description>
+
+    <modules>
+        <module>cockroachdb-junit4</module>
+        <module>cockroachdb-test-core</module>
+    </modules>
+    <packaging>pom</packaging>
 
     <licenses>
         <license>
@@ -18,12 +22,14 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
+
     <scm>
         <url>https://github.com/Melozzola/${project.artifactId}.git</url>
         <connection>scm:git:https://github.com/Melozzola/${project.artifactId}.git</connection>
         <developerConnection>scm:git:git@github.com:Melozzola/${project.artifactId}.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
+
     <developers>
         <developer>
             <id>Melozzola</id>
@@ -45,95 +51,91 @@
         <javadoc.opts>-Xdoclint:none</javadoc.opts>
     </properties>
 
-    <dependencies>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>${junit.version}</version>
-            <scope>provided</scope>
-        </dependency>
+    <dependencyManagement>
+        <dependencies>
 
-        <dependency>
-            <groupId>com.zaxxer</groupId>
-            <artifactId>HikariCP</artifactId>
-            <version>2.7.3</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>42.1.4</version>
-            <scope>test</scope>
-        </dependency>
-
-    </dependencies>
+        </dependencies>
+    </dependencyManagement>
 
     <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <!-- Deploy a "-sources.jar" along with build -->
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>3.0.1</version>
+                    <executions>
+                        <execution>
+                            <id>attach-sources</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>jar-no-fork</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <!-- Deploy a "-javadoc.jar" along with build -->
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>2.10.4</version>
+                    <executions>
+                        <execution>
+                            <id>attach-javadocs</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <!--
+                        Plugin to check that all source files have the appropriate open source license header.
+                        This will fail the build if any source files don't have the open source license header.
+                        To actually apply the header to new source files, run: mvn license:format
+                    -->
+                    <groupId>com.mycila</groupId>
+                    <artifactId>license-maven-plugin</artifactId>
+                    <version>3.0</version>
+                    <configuration>
+                        <aggregate>true</aggregate>
+                        <header>etc/header.txt</header>
+                        <includes>
+                            <include>src/**</include>
+                            <include>cockroachdb-junit4/src/**</include>
+                            <include>cockroachdb-test-core/src/**</include>
+                        </includes>
+                        <excludes>
+                            <exclude>src/test/resources/**</exclude>
+                            <exclude>src/main/resources/binaries/**</exclude>
+                            <include>cockroachdb-junit4/src/test/resources/**</include>
+                            <include>cockroachdb-test-core/src/test/resources/**</include>
+                            <include>cockroachdb-test-core/src/main/resources/binaries/**</include>
+                        </excludes>
+                        <strictCheck>true</strictCheck>
+                        <mapping>
+                            <g4>JAVADOC_STYLE</g4>
+                        </mapping>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <phase>deploy</phase>
+                            <goals>
+                                <goal>check</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+
+            </plugins>
+        </pluginManagement>
         <plugins>
             <plugin>
-                <!-- Deploy a "-sources.jar" along with build -->
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>3.0.1</version>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>jar-no-fork</goal>
-                        </goals>
-                    </execution>
-                </executions>
+                <groupId>com.mycila</groupId>
+                <artifactId>license-maven-plugin</artifactId>
             </plugin>
-            <plugin>
-                <!-- Deploy a "-javadoc.jar" along with build -->
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.10.4</version>
-                <executions>
-                    <execution>
-                        <id>attach-javadocs</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <!--
-                    Plugin to check that all source files have the appropriate open source license header.
-                    This will fail the build if any source files don't have the open source license header.
-                    To actually apply the header to new source files, run: mvn license:format
-                -->
-                <groupId>com.mycila.maven-license-plugin</groupId>
-                <artifactId>maven-license-plugin</artifactId>
-                <version>3.0</version>
-                <configuration>
-                    <header>src/etc/header.txt</header>
-                    <includes>
-                        <include>src/**</include>
-                    </includes>
-                    <excludes>
-                        <exclude>src/test/resources/**</exclude>
-                        <exclude>src/main/resources/binaries/**</exclude>
-                    </excludes>
-                    <strictCheck>true</strictCheck>
-                    <mapping>
-                        <g4>JAVADOC_STYLE</g4>
-                    </mapping>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>deploy</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
         </plugins>
     </build>
 
