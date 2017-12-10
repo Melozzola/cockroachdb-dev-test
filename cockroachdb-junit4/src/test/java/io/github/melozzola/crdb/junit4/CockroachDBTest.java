@@ -49,7 +49,7 @@ public class CockroachDBTest {
     @Test
     public void testRule() throws Exception {
 
-        // Here we can interact with the cockroach db database.
+        // Here we can interact with the cockroach db.
 
         try (final Connection db = DriverManager.getConnection(url, "root", "")){
 
