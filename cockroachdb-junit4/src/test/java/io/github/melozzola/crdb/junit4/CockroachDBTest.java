@@ -15,34 +15,50 @@
  */
 package io.github.melozzola.crdb.junit4;
 
-import io.github.melozzola.crdb.process.Cockroach;
 import io.github.melozzola.crdb.process.ProcessDetails;
-import org.junit.*;
+import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Test;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
+
+import static io.github.melozzola.crdb.junit4.CockroachDB.*;
+import static io.github.melozzola.crdb.process.Cockroach.builder;
 
 /**
  * <p> CockroachDB junit 4 rule test
  */
 public class CockroachDBTest {
 
+    private static final String JDBC_URL_CTX_KEY = "JDBC_URL";
+
     @ClassRule
-    public static CockroachDB cockroachDB = new CockroachDB(Cockroach.builder().build());
-    private static String url;
+    public static CockroachDB cockroachDB = newCockroachDB(
+            builder()
+                    .stdErr(System.err)// Redirect the cockroach db process errors to std err
+                    .stdOut(System.out)// Redirect the cockroach db process std out to System.out
+                    // There ae other config options here like .version(...) .host(...) etc..
+                    .build(),
+            context -> {
 
-    @BeforeClass
-    public static void setUp() throws Exception{
+                // Some initialization. You can put this in a @BeforeClass method
 
-        // For example here we can initialise the database with some data...
+                final ProcessDetails pd = getFromContext(context, PROCESS_DETAILS_CTX_KEY, ProcessDetails.class);
+                final String jdbcUrl = String.format("jdbc:postgresql://%s:%d/test?sslmode=disable", pd.getHost(), pd.getPort());
+                context.put(JDBC_URL_CTX_KEY, jdbcUrl);
+                initDatabase(jdbcUrl);
+            }
+    );
 
-        Class.forName("org.postgresql.Driver");
-        final ProcessDetails pd = CockroachDB.getProcessDetailsOrThrow();
-        url = String.format("jdbc:postgresql://%s:%d/test?sslmode=disable", pd.getHost(), pd.getPort());
-        try (final Connection db = DriverManager.getConnection(url, "root", "")){
+    private static void initDatabase(final String jdbcUrl){
+        try (final Connection db = DriverManager.getConnection(jdbcUrl, "root", "")){
+            Class.forName("org.postgresql.Driver");
             db.createStatement().execute("CREATE DATABASE IF NOT EXISTS test;");
             db.createStatement().execute("CREATE TABLE IF NOT EXISTS logs (id INT PRIMARY KEY, log TEXT);");
+        }catch (Exception e){
+            throw new IllegalStateException("Cannot initialise the database", e);
         }
     }
 
@@ -51,7 +67,8 @@ public class CockroachDBTest {
 
         // Here we can interact with the cockroach db.
 
-        try (final Connection db = DriverManager.getConnection(url, "root", "")){
+        final String jdbcUrl = cockroachDB.getFromContextOrThrow(JDBC_URL_CTX_KEY, String.class);
+        try (final Connection db = DriverManager.getConnection(jdbcUrl, "root", "")){
 
             db.createStatement().execute("INSERT INTO test.logs (id, log) VALUES (1, 'value 1'), (2, 'value 2');");
             final ResultSet res = db.createStatement().executeQuery("SELECT id, log FROM test.logs ORDER BY id ASC;");

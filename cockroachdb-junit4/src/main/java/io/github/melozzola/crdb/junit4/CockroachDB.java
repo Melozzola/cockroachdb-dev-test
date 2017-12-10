@@ -19,44 +19,161 @@ import io.github.melozzola.crdb.process.Cockroach;
 import io.github.melozzola.crdb.process.ProcessDetails;
 import org.junit.rules.ExternalResource;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * <p> Junit 4 rule that is starting up/shutting down a cockroachDb process.
- * <p> <b>Important:</b> the rule is meant to be used as class rule.
- * <p> The process details are stored in a thread local variable and they are exposed via the method {@link #getProcessDetailsOrThrow}
  */
 public class CockroachDB extends ExternalResource {
 
+    /**
+     * <p> Context key under which the process details ({@link ProcessDetails}) will be stored.
+     */
+    public static final String PROCESS_DETAILS_CTX_KEY = "PROCESS_DETAILS";
+
     private final Cockroach cockroach;
-
-    public CockroachDB(final Cockroach cockroach) {
-        this.cockroach = cockroach;
-    }
-
-    private static ThreadLocal<ProcessDetails> processDetails = new ThreadLocal<>();
+    private final Listener listener;
+    private final Map<String, Object> context = new HashMap<>();
 
     /**
-     * <p> Returns the cockroach db process details.
-     * <p> The process details will be available after the rule has been applied (method {@link #before()} has been successfully called), if there are no process details it will throw an {@link IllegalStateException}.
-     *
-     * @return The cockroach db process details.
+     * <p> Listener called when the {@link #before()} method finished the initialization and cockroach db is up and running.
+     *     It can be used as a hook point for database initialization.
      */
-    public static ProcessDetails getProcessDetailsOrThrow(){
-        final ProcessDetails config = processDetails.get();
-        if (config == null){
-            throw new IllegalStateException("Process details not found. Verify that the rule has started.");
-        }
-        return config;
+    interface Listener{
+        void onStartUp(Map<String, Object> context);
+    }
+
+    /**
+     * <p> Instantiates a new {@link CockroachDB} rule.
+     *
+     * @param cockroach The cockroach db process configuration
+     * @param listener {@link Listener} that will be called once cockroach db is up and running
+     * @return An instance of the {@link CockroachDB} rule
+     */
+    public static CockroachDB newCockroachDB(final Cockroach cockroach, final Listener listener){
+        return new CockroachDB(cockroach, listener);
+    }
+
+    /**
+     * <p> Instantiates a new {@link CockroachDB} rule.
+     *
+     * @param cockroach The cockroach db process configuration
+     * @return An instance of the {@link CockroachDB} rule
+     */
+    public static CockroachDB newCockroachDB(final Cockroach cockroach){
+        return newCockroachDB(cockroach, null);
+    }
+
+    /**
+     * <p> Private constructor. The rule can be instantiated via factory methods ( See {@link #newCockroachDB(Cockroach)} and {@link #newCockroachDB(Cockroach, Listener)} )
+     *
+     * @param cockroach The {@link Cockroach} object that allows to start the cockroach process.
+     * @param listener An optional listener that will be called at the end of the {@link #before()} method.
+     */
+    private CockroachDB(final Cockroach cockroach, final Listener listener) {
+        this.cockroach = cockroach;
+        this.listener = listener;
     }
 
     @Override
     protected void before() throws Throwable {
         super.before();
         final ProcessDetails details = cockroach.startUp();
-        processDetails.set(details);
+        context.put(PROCESS_DETAILS_CTX_KEY, details);
+        if (listener != null){
+            listener.onStartUp(context);
+        }
     }
 
     @Override
     protected void after() {
         cockroach.shutDown();
+    }
+
+    /**
+     * <p> Returns a value stored in the context. It throws an {@link IllegalStateException} if the value is not found
+     *
+     * @param key The key
+     * @param type The type of the value object.
+     * @param <T> type of the value object
+     * @return The object in the context. If no object is found it will throe an {@link IllegalStateException}
+     */
+    public <T>T getFromContextOrThrow(final String key, final Class<T> type){
+        return getFromContextOrThrow(this.context, key, type);
+    }
+
+    /**
+     * <p> Returns a value stored in the context or {@code null} if the object is not found.
+     *
+     * @param key The key
+     * @param type The type of the value object.
+     * @param <T> type of the value object
+     * @return The object in the context or {@code null}
+     */
+    public <T>T getFromContext(final String key, final Class<T> type){
+        return getFromContext(this.context, key, type);
+    }
+
+    /**
+     * <p> Returns a value stored in the context or the specified default if the object is not found.
+     *
+     * @param key The key
+     * @param type The type of the value object.
+     * @param defaultValue Default value to return if the object is not found
+     * @param <T> type of the value object
+     * @return The object in the context or the default value
+     */
+    public <T>T getFromContextOrDefault(final String key, final Class<T> type, T defaultValue){
+        return getFromContextOrDefault(this.context, key, type, defaultValue);
+    }
+
+    /**
+     * <p> Returns a value stored in the context. It throws an {@link IllegalStateException} if the value is not found
+     *
+     * @param context The context map
+     * @param key The key
+     * @param type The type of the value object.
+     * @param <T> type of the value object
+     * @return The object in the context. If no object is found it will throe an {@link IllegalStateException}
+     */
+    public static <T> T getFromContextOrThrow(final Map<String, Object> context, final String key, final Class<T> type){
+        final Object value = context.get(key);
+        if (value == null){
+            throw new IllegalStateException("Value for key " + key + " not found");
+        }
+        return type.cast(value);
+    }
+
+    /**
+     * <p> Returns a value stored in the context or {@code null} if the object is not found.
+     *
+     * @param context The context map
+     * @param key The key
+     * @param type The type of the value object.
+     * @param <T> type of the value object
+     * @return The object in the context or {@code null}
+     */
+    public static <T> T getFromContext(final Map<String, Object> context, final String key, final Class<T> type){
+        final Object value = context.get(key);
+        return type.cast(value);
+    }
+
+    /**
+     * <p> Returns a value stored in the context or the specified default if the object is not found.
+     *
+     * @param context The context map
+     * @param key The key
+     * @param type The type of the value object.
+     * @param defaultValue Default value to return if the object is not found
+     * @param <T> type of the value object
+     * @return The object in the context or the default value
+     */
+    public static <T> T getFromContextOrDefault(final Map<String, Object> context, final String key, final Class<T> type, T defaultValue){
+        final Object value = context.get(key);
+        if (value == null){
+            return defaultValue;
+        }
+        return type.cast(value);
     }
 }

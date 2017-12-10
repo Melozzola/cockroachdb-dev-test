@@ -9,6 +9,12 @@
     <name>cockroachdb-dev-test</name>
     <description>JUnit rule for CockroachDB development</description>
 
+    <parent>
+        <groupId>org.sonatype.oss</groupId>
+        <artifactId>oss-parent</artifactId>
+        <version>7</version>
+    </parent>
+
     <modules>
         <module>cockroachdb-junit4</module>
         <module>cockroachdb-test-core</module>
@@ -60,8 +66,11 @@
     <build>
         <pluginManagement>
             <plugins>
+
                 <plugin>
-                    <!-- Deploy a "-sources.jar" along with build -->
+                    <!--
+                        Deploy also '-sources.jar'
+                    -->
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-source-plugin</artifactId>
                     <version>3.0.1</version>
@@ -75,8 +84,11 @@
                         </execution>
                     </executions>
                 </plugin>
+
                 <plugin>
-                    <!-- Deploy a "-javadoc.jar" along with build -->
+                    <!--
+                        Deploy also '-javadoc.jar'
+                    -->
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
                     <version>2.10.4</version>
@@ -90,43 +102,22 @@
                         </execution>
                     </executions>
                 </plugin>
+
                 <plugin>
                     <!--
-                        Plugin to check that all source files have the appropriate open source license header.
-                        This will fail the build if any source files don't have the open source license header.
-                        To actually apply the header to new source files, run: mvn license:format
+                        Check that all src files contain the open source license header.
+                        Build will fail if any source files don't have the open source license header.
+                        To actually add the header to source files: mvn license:format
                     -->
                     <groupId>com.mycila</groupId>
                     <artifactId>license-maven-plugin</artifactId>
                     <version>3.0</version>
-                    <configuration>
-                        <aggregate>true</aggregate>
-                        <header>etc/header.txt</header>
-                        <includes>
-                            <include>src/**</include>
-                            <include>cockroachdb-junit4/src/**</include>
-                            <include>cockroachdb-test-core/src/**</include>
-                        </includes>
-                        <excludes>
-                            <exclude>src/test/resources/**</exclude>
-                            <exclude>src/main/resources/binaries/**</exclude>
-                            <include>cockroachdb-junit4/src/test/resources/**</include>
-                            <include>cockroachdb-test-core/src/test/resources/**</include>
-                            <include>cockroachdb-test-core/src/main/resources/binaries/**</include>
-                        </excludes>
-                        <strictCheck>true</strictCheck>
-                        <mapping>
-                            <g4>JAVADOC_STYLE</g4>
-                        </mapping>
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <phase>deploy</phase>
-                            <goals>
-                                <goal>check</goal>
-                            </goals>
-                        </execution>
-                    </executions>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <version>2.4.3</version>
                 </plugin>
 
             </plugins>
@@ -140,8 +131,109 @@
     </build>
 
     <profiles>
+
         <profile>
-            <!-- Prevent JavaDoc warnings from failing the build under Java 8... -->
+            <!--
+                Profile to enable when releasing to Maven Central. The activation will enable:
+                * validation of the open source header via the 'license-maven-plugin'
+                * Jar gpg signing via the 'maven-gpg-plugin'
+            -->
+            <id>release-sign-artifacts</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+                <property>
+                    <name>performRelease</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+
+                    <plugin>
+                        <!--
+                            Sign all artifacts when executing mvn deploy.
+                            This is required when publishing artifacts to Sonatype/Maven Central.
+                            It requires GnuPG (aka GPG) to be installed and configured on the machine on which this is run,
+                            and for the public key to be uploaded to key servers (e.g. pool.sks-keyservers.net).
+                            See: https://docs.sonatype.org/display/Repository/How+To+Generate+PGP+Signatures+With+Maven
+                         -->
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>1.4</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <!--suppress MavenModelInspection -->
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <!--
+                            Check that all source files have the appropriate open source license header.
+                            This will fail the build if any source files don't have the open source license header.
+                            To actually apply the header to new source files, run: mvn license:format
+                        -->
+                        <groupId>com.mycila.maven-license-plugin</groupId>
+                        <artifactId>maven-license-plugin</artifactId>
+                        <configuration>
+                            <aggregate>true</aggregate>
+                            <header>etc/header.txt</header>
+                            <includes>
+                                <include>src/**</include>
+                                <!--<include>cockroachdb-junit4/src/**</include>-->
+                                <!--<include>cockroachdb-test-core/src/**</include>-->
+                            </includes>
+                            <excludes>
+                                <exclude>src/test/resources/**</exclude>
+                                <exclude>src/main/resources/binaries/**</exclude>
+                                <!--<include>cockroachdb-junit4/src/test/resources/**</include>-->
+                                <!--<include>cockroachdb-test-core/src/test/resources/**</include>-->
+                                <!--<include>cockroachdb-test-core/src/main/resources/binaries/**</include>-->
+                            </excludes>
+                            <strictCheck>true</strictCheck>
+                            <mapping>
+                                <g4>JAVADOC_STYLE</g4>
+                            </mapping>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <phase>deploy</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-release-plugin</artifactId>
+                        <version>2.5.3</version>
+                        <executions>
+                            <execution>
+                                <id>default</id>
+                                <goals>
+                                    <goal>perform</goal>
+                                </goals>
+                                <configuration>
+                                    <pomFileName>pom.xml</pomFileName>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <!--
+                Prevent JavaDoc warnings from failing the build under Java 8...
+            -->
             <id>doclint-java8-disable</id>
             <activation>
                 <jdk>[1.8,)</jdk>
