@@ -209,6 +209,14 @@
                         </executions>
                     </plugin>
 
+                    <!--
+                    ./mvnw -DperformRelease release:clean
+                    ./mvnw -DperformRelease -DdryRun=true release:prepare
+                    ./mvnw -DperformRelease release:prepare
+                    ./mvnw -DperformRelease release:perform
+
+                    git tag -d cockroachdb-dev-test-1.0.0 && git push origin :refs/tags/TagName
+                    -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-release-plugin</artifactId>

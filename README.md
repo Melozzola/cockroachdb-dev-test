@@ -15,7 +15,7 @@ This library should not be used for performance tests or 'heavy' integration tes
 
 ## Current version
 
-Release coming soon.
+The most recent release is ```1.0.0```
 
 The Maven group ID is ```io.github.melozzola```, and there are four different artifacts you can choose from:
 
