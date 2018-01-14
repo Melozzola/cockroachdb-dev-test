@@ -40,7 +40,7 @@ public class CockroachDB extends ExternalResource {
      * <p> Listener called when the {@link #before()} method finished the initialization and cockroach db is up and running.
      *     It can be used as a hook point for database initialization.
      */
-    interface Listener{
+    public interface Listener{
         void onStartUp(Map<String, Object> context);
     }
 

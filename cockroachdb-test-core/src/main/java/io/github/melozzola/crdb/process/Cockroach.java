@@ -19,6 +19,7 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.github.melozzola.crdb.utils.Utils.*;
@@ -38,6 +39,7 @@ public class Cockroach {
     private boolean cleanUpDataFolder = true;
     private String executable;
     private int startupWaitTimeMs = 10000;// 10 secs
+    private int shutDownWaitingTimeMs = 10000;// 10 secs
     private Appendable stdErr = System.out;
     private Appendable stdOut = System.err;
     private boolean redirectStdErr = false;
@@ -130,6 +132,17 @@ public class Cockroach {
          */
         public Builder startupWaitTime(final int startupWaitTimeMs) {
             cockroach.startupWaitTimeMs = startupWaitTimeMs;
+            return this;
+        }
+
+        /**
+         * <p> How long (milliseconds) to wait for cockroach db to stop. By default is 10 seconds.
+         *
+         * @param shutDownWaitingTimeMs How many milliseconds to wait.
+         * @return The builder.
+         */
+        public Builder shutDownWaitingTime(final int shutDownWaitingTimeMs) {
+            cockroach.shutDownWaitingTimeMs = shutDownWaitingTimeMs;
             return this;
         }
 
@@ -251,9 +264,9 @@ public class Cockroach {
                 return;
             }
             try {
-                crdb.destroy();
+                killProcessOrThrow();
             }catch (Exception e){
-                throw new IllegalStateException("failed to shut down cockroach db process. Pid: " + processDetails.pid + ", Url: " + processDetails.url);
+                throw new IllegalStateException("failed to shut down cockroach db process. Pid: " + processDetails.pid + ", Url: " + processDetails.url, e);
             }finally {
                 if (cleanUpDataFolder) {
                     recursiveDelete(workFolder);
@@ -261,6 +274,14 @@ public class Cockroach {
             }
         }else {
             throw new IllegalStateException("Invalid status. Status: " + status.get());
+        }
+    }
+
+    private void killProcessOrThrow() throws Exception {
+        crdb.destroyForcibly();
+        boolean exited = crdb.waitFor(shutDownWaitingTimeMs, TimeUnit.MILLISECONDS);
+        if (!exited){
+            throw new IllegalStateException("Cockroach db process failed to stop within the " + shutDownWaitingTimeMs + " ms timeout. Pid: " + processDetails.pid);
         }
     }
 
