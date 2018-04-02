@@ -15,7 +15,7 @@ This library should not be used for performance tests or 'heavy' integration tes
 
 ## Current version
 
-The most recent release is ```1.0.0```
+The most recent release is ```1.0.1```
 
 The Maven group ID is ```io.github.melozzola```, and there are four different artifacts you can choose from:
 
@@ -70,7 +70,7 @@ or, if you prefer a fat jar:
 
 **1.0.1**
 - Fixed bug where CockroachDB#Listener was package private.
-- Implemented a saver way to shut down the cockroach process.
+- Implemented a safer way to shut down the cockroach process.
 - Made 1.1.7 the default version.
 
 
