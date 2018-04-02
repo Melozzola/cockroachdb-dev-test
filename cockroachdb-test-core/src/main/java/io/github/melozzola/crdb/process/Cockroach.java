@@ -147,7 +147,7 @@ public class Cockroach {
         }
 
         /**
-         * <p> What cockroach db version to use. By default is 1.1.2.
+         * <p> What cockroach db version to use. By default is 1.1.7.
          *
          * @param version The version to use
          * @return The builder.
