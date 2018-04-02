@@ -4,7 +4,7 @@
 
     <groupId>io.github.melozzola</groupId>
     <artifactId>cockroachdb-dev-test</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.1</version>
     <name>cockroachdb-dev-test</name>
     <description>JUnit rule for CockroachDB development</description>
 
@@ -32,7 +32,7 @@
         <url>https://github.com/Melozzola/${project.artifactId}.git</url>
         <connection>scm:git:https://github.com/Melozzola/${project.artifactId}.git</connection>
         <developerConnection>scm:git:git@github.com:Melozzola/${project.artifactId}.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>cockroachdb-dev-test-1.0.1</tag>
     </scm>
 
     <developers>
