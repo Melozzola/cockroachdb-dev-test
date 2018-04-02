@@ -29,7 +29,7 @@ Following there is an example of how to use the ```cockroachdb-junit4``` in your
 **Gradle**
 
 ```groovy
-    testCompile('io.github.melozzola:cockroachdb-junit4:0.0.1-SNAPSHOT')
+    testCompile('io.github.melozzola:cockroachdb-junit4:1.0.1-SNAPSHOT')
 ```
 
 **Maven**
@@ -38,7 +38,7 @@ Following there is an example of how to use the ```cockroachdb-junit4``` in your
 <dependency>
     <groupId>io.github.melozzola</groupId>
     <artifactId>cockroachdb-junit4</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.1</version>
     <scope>test</scope>
 </dependency>
 ```
@@ -48,7 +48,7 @@ or, if you prefer a fat jar:
 **Gradle**
 
 ```groovy
-    testCompile('io.github.melozzola:cockroachdb-junit4:0.0.1-SNAPSHOT:all@jar')
+    testCompile('io.github.melozzola:cockroachdb-junit4:1.0.1-SNAPSHOT:all@jar')
 ```
 
 **Maven**
@@ -57,11 +57,22 @@ or, if you prefer a fat jar:
 <dependency>
     <groupId>io.github.melozzola</groupId>
     <artifactId>cockroachdb-junit4</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.1</version>
     <scope>test</scope>
     <classifier>all</classifier>
 </dependency>
 ```
+
+### Change Log
+
+**1.0.0**
+- First release.
+
+**1.0.1**
+- Fixed bug where CockroachDB#Listener was package private.
+- Implemented a saver way to shut down the cockroach process.
+- Made 1.1.7 the default version.
+
 
 ## Usage
 
