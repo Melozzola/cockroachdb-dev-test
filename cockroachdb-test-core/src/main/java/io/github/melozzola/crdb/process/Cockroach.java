@@ -35,7 +35,7 @@ import static io.github.melozzola.crdb.utils.Utils.*;
  */
 public class Cockroach {
 
-    private String version = "v1.1.3";
+    private String version = "v1.1.7";
     private boolean cleanUpDataFolder = true;
     private String executable;
     private int startupWaitTimeMs = 10000;// 10 secs
